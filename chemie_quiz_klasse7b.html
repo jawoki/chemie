@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chemie Quiz – Klasse 7</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f5f4f0; --surface: #ffffff; --surface2: #f1efe8;
+  --border: rgba(0,0,0,0.12); --border2: rgba(0,0,0,0.22);
+  --text: #1a1a18; --text2: #5f5e5a; --text3: #888780;
+  --blue: #185fa5; --blue-bg: #e6f1fb; --blue-text: #0c447c;
+  --green: #3b6d11; --green-bg: #eaf3de; --green-text: #27500a;
+  --red: #a32d2d; --red-bg: #fcebeb; --red-text: #791f1f;
+  --amber: #854f0b; --amber-bg: #faeeda; --amber-text: #633806;
+  --radius: 10px; --radius-sm: 6px;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1c1c1a; --surface: #2a2a27; --surface2: #323230;
+    --border: rgba(255,255,255,0.1); --border2: rgba(255,255,255,0.2);
+    --text: #e8e6de; --text2: #b4b2a9; --text3: #888780;
+    --blue: #85b7eb; --blue-bg: #042c53; --blue-text: #b5d4f4;
+    --green: #97c459; --green-bg: #173404; --green-text: #c0dd97;
+    --red: #f09595; --red-bg: #501313; --red-text: #f7c1c1;
+    --amber: #ef9f27; --amber-bg: #412402; --amber-text: #fac775;
+  }
+}
+body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; min-height: 100vh; padding: 1rem; -webkit-text-size-adjust: 100%; }
+.container { max-width: 680px; margin: 0 auto; }
+header { text-align: center; padding: 1.5rem 0 1rem; }
+header h1 { font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+header p { font-size: 14px; color: var(--text2); }
+.hud { display: -webkit-flex; display: flex; -webkit-align-items: center; align-items: center; gap: 10px; flex-wrap: wrap; background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 10px 14px; margin-bottom: 1rem; }
+.hud-pill { background: var(--surface2); border-radius: 20px; padding: 4px 12px; font-size: 13px; color: var(--text2); white-space: nowrap; }
+.hud-pill b { color: var(--text); }
+.xp-wrap { -webkit-flex: 1; flex: 1; min-width: 100px; }
+.xp-track { height: 8px; background: var(--surface2); border-radius: 4px; overflow: hidden; }
+.xp-fill { height: 100%; background: var(--blue); border-radius: 4px; transition: width .5s ease; }
+.level-txt { font-size: 11px; color: var(--text3); margin-top: 3px; }
+.cats { display: -webkit-flex; display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+.cat-btn { padding: 6px 14px; border-radius: 20px; border: 0.5px solid var(--border2); font-size: 13px; cursor: pointer; background: var(--surface); color: var(--text2); -webkit-appearance: none; appearance: none; }
+.cat-btn.active { background: var(--blue-bg); color: var(--blue-text); border-color: transparent; font-weight: 600; }
+.card { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1.25rem; margin-bottom: 1rem; }
+.q-meta { font-size: 12px; color: var(--text3); margin-bottom: 8px; }
+.q-text { font-size: 16px; font-weight: 500; line-height: 1.5; margin-bottom: 1rem; }
+.answers { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+@media (max-width: 480px) { .answers { grid-template-columns: 1fr; } }
+.ans { padding: 11px 14px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); font-size: 14px; cursor: pointer; text-align: left; background: var(--surface2); color: var(--text); line-height: 1.4; width: 100%; -webkit-appearance: none; appearance: none; }
+.ans.correct { background: var(--green-bg); border-color: var(--green); color: var(--green-text); font-weight: 600; }
+.ans.wrong { background: var(--red-bg); border-color: var(--red); color: var(--red-text); }
+.feedback { margin-top: 12px; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 14px; display: none; line-height: 1.5; }
+.feedback.show { display: block; }
+.feedback.ok { background: var(--green-bg); color: var(--green-text); border-left: 3px solid var(--green); }
+.feedback.bad { background: var(--red-bg); color: var(--red-text); border-left: 3px solid var(--red); }
+.streak-row { min-height: 20px; text-align: right; font-size: 13px; color: var(--text3); margin-bottom: 6px; }
+.streak-hot { color: var(--amber); font-weight: 600; }
+.next-btn { margin-top: 12px; padding: 9px 22px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); font-size: 14px; cursor: pointer; background: var(--surface); color: var(--text); display: none; -webkit-appearance: none; appearance: none; }
+.next-btn.show { display: inline-block; }
+.popup { position: fixed; top: 16px; right: 16px; left: 16px; background: var(--surface); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px 18px; font-size: 14px; font-weight: 500; color: var(--text); display: none; z-index: 999; }
+.score-screen { text-align: center; padding: 2rem 1rem; }
+.score-emoji { font-size: 56px; margin-bottom: 0.5rem; }
+.score-screen h2 { font-size: 18px; font-weight: 600; margin-bottom: 1rem; }
+.big-num { font-size: 52px; font-weight: 700; color: var(--blue-text); margin: 0.5rem 0; }
+.score-detail { font-size: 14px; color: var(--text2); margin-bottom: 1.25rem; }
+.badges-earned { display: -webkit-flex; display: flex; flex-wrap: wrap; gap: 8px; -webkit-justify-content: center; justify-content: center; margin-bottom: 1.5rem; }
+.badge-chip { padding: 5px 14px; border-radius: 20px; font-size: 13px; background: var(--surface2); color: var(--text3); border: 0.5px solid var(--border); }
+.badge-chip.earned { background: var(--amber-bg); color: var(--amber-text); border-color: transparent; font-weight: 600; }
+.restart { padding: 11px 28px; border-radius: var(--radius-sm); border: none; font-size: 15px; cursor: pointer; background: var(--blue-bg); color: var(--blue-text); font-weight: 600; -webkit-appearance: none; appearance: none; }
+.diagram-toggle { width: 100%; padding: 10px 14px; border-radius: var(--radius-sm); border: 0.5px solid var(--border2); font-size: 14px; cursor: pointer; background: var(--surface); color: var(--text2); text-align: left; margin-bottom: 0.5rem; -webkit-appearance: none; appearance: none; }
+.diagram-box { background: var(--surface); border: 0.5px solid var(--border); border-radius: var(--radius); padding: 1rem; margin-bottom: 1rem; display: none; }
+.diagram-box.open { display: block; }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>&#9879;&#65039; Chemie Quiz &#8211; Klasse 7</h1>
+    <p>Teilchenmodell &middot; Energie &amp; Reaktionen &middot; Verbrennung &middot; Geschichte</p>
+  </header>
+
+  <button class="diagram-toggle" id="diag-toggle">&#128202; Energiediagramm anzeigen / ausblenden</button>
+  <div class="diagram-box" id="diag-box">
+    <svg viewBox="0 0 660 300" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+      <style>.dt{font-family:-apple-system,sans-serif;font-size:12px;fill:#5f5e5a}.dh{font-family:-apple-system,sans-serif;font-size:13px;font-weight:600;fill:#1a1a18}@media(prefers-color-scheme:dark){.dt{fill:#b4b2a9}.dh{fill:#e8e6de}}</style>
+      <text class="dh" x="160" y="20" text-anchor="middle">Exotherm</text>
+      <line x1="30" y1="270" x2="30" y2="30" stroke="currentColor" stroke-width="1.2" marker-end="url(#arr)" opacity=".5"/>
+      <line x1="30" y1="270" x2="310" y2="270" stroke="currentColor" stroke-width="1.2" marker-end="url(#arr)" opacity=".5"/>
+      <text class="dt" x="24" y="28" text-anchor="middle">E</text>
+      <text class="dt" x="308" y="284">Zeit</text>
+      <path d="M 48 190 C 80 190, 100 80, 140 80 C 180 80, 200 240, 260 240" fill="none" stroke="#185fa5" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="30" y1="190" x2="65" y2="190" stroke="#888780" stroke-width="1" stroke-dasharray="4 3"/>
+      <line x1="225" y1="240" x2="275" y2="240" stroke="#888780" stroke-width="1" stroke-dasharray="4 3"/>
+      <line x1="115" y1="80" x2="162" y2="80" stroke="#888780" stroke-width="1" stroke-dasharray="4 3"/>
+      <line x1="56" y1="190" x2="56" y2="83" stroke="#a32d2d" stroke-width="1.2" marker-end="url(#arr)" marker-start="url(#arr)"/>
+      <text class="dt" x="60" y="142" fill="#a32d2d">E-Akt.</text>
+      <line x1="272" y1="190" x2="272" y2="242" stroke="#3b6d11" stroke-width="1.2" marker-end="url(#arr)" marker-start="url(#arr)"/>
+      <text class="dt" x="276" y="218" fill="#3b6d11">&#916;E frei</text>
+      <text class="dt" x="42" y="183">Ausg.</text>
+      <text class="dt" x="200" y="258">Produkte</text>
+      <text class="dh" x="500" y="20" text-anchor="middle">Endotherm</text>
+      <line x1="360" y1="270" x2="360" y2="30" stroke="currentColor" stroke-width="1.2" marker-end="url(#arr)" opacity=".5"/>
+      <line x1="360" y1="270" x2="645" y2="270" stroke="currentColor" stroke-width="1.2" marker-end="url(#arr)" opacity=".5"/>
+      <text class="dt" x="354" y="28" text-anchor="middle">E</text>
+      <text class="dt" x="643" y="284">Zeit</text>
+      <path d="M 378 240 C 410 240, 430 75, 470 75 C 510 75, 530 165, 595 165" fill="none" stroke="#185fa5" stroke-width="2.2" stroke-linecap="round"/>
+      <line x1="360" y1="240" x2="395" y2="240" stroke="#888780" stroke-width="1" stroke-dasharray="4 3"/>
+      <line x1="360" y1="165" x2="560" y2="165" stroke="#888780" stroke-width="1" stroke-dasharray="4 3"/>
+      <line x1="445" y1="75" x2="492" y2="75" stroke="#888780" stroke-width="1" stroke-dasharray="4 3"/>
+      <line x1="388" y1="238" x2="388" y2="78" stroke="#a32d2d" stroke-width="1.2" marker-end="url(#arr)" marker-start="url(#arr)"/>
+      <text class="dt" x="392" y="162" fill="#a32d2d">E-Akt.</text>
+      <line x1="608" y1="240" x2="608" y2="168" stroke="#854f0b" stroke-width="1.2" marker-end="url(#arr)" marker-start="url(#arr)"/>
+      <text class="dt" x="612" y="206" fill="#854f0b">&#916;E aufg.</text>
+      <text class="dt" x="372" y="254">Ausg.</text>
+      <text class="dt" x="545" y="158">Produkte</text>
+    </svg>
+  </div>
+
+  <div class="hud">
+    <div class="hud-pill">&#11088; <b id="xp-val">0</b> XP</div>
+    <div class="hud-pill">&#128293; Streak: <b id="streak-val">0</b></div>
+    <div class="xp-wrap">
+      <div class="xp-track"><div class="xp-fill" id="xp-fill" style="width:0%"></div></div>
+      <div class="level-txt">Level <span id="lv-val">1</span> &#8211; <span id="lv-name">Schueler</span></div>
+    </div>
+  </div>
+
+  <div class="cats" id="cats"></div>
+  <div id="quiz"></div>
+  <div class="popup" id="popup"></div>
+</div>
+
+<script>
+var QUESTIONS = [
+  { cat:"Teilchenmodell", q:"Was ist Diffusion?", a:["Gleichmaessige Verteilung von Teilchen durch staendige Eigenbewegung","Das Schmelzen von Stoffen bei Waerme","Die Anziehungskraft zwischen Atomen","Das Trennen von Gemischen"], c:0, ex:"Diffusion entsteht durch die staendige, ungerichtete Bewegung der Teilchen - sie verteilen sich gleichmaessig im verfuegbaren Raum." },
+  { cat:"Teilchenmodell", q:"Wie sind Teilchen im festen Zustand angeordnet?", a:["Im Gitter, schwingen um ihre Plaetze","Weit auseinander, bewegen sich frei","Dicht, aber verschiebbar","Zufaellig verteilt"], c:0, ex:"Im Feststoff sitzen Teilchen in einem regelmaessigen Gitter und schwingen - sie verlassen ihren Platz aber nicht." },
+  { cat:"Teilchenmodell", q:"Warum lassen sich Gase leichter zusammendruecken als Fluessigkeiten?", a:["Gasfоermige Teilchen haben viel Abstand zwischen sich","Gasteilchen sind kleiner","Gasteilchen haben keine Masse","Gasteilchen ziehen sich nicht an"], c:0, ex:"Im gasfоermigen Zustand ist viel leerer Raum zwischen den Teilchen - dieser Raum kann verkleinert werden." },
+  { cat:"Teilchenmodell", q:"Was passiert mit der Teilchengeschwindigkeit beim Erwaermen?", a:["Sie steigt","Sie sinkt","Sie bleibt gleich","Sie schwankt zufaellig"], c:0, ex:"Mehr Temperatur = mehr Energie = schnellere Teilchen. Das gilt fuer alle Aggregatzustaende." },
+  { cat:"Teilchenmodell", q:"Welches Gasteilchen ist am schwersten? (H2, O2, CO2, Cl, Xe)", a:["Xenon (Xe)","Sauerstoff (O2)","Kohlenstoffdioxid (CO2)","Chlor (Cl)"], c:0, ex:"Xenon hat die groesste Atommasse - und ist damit am langsamsten und schwersten." },
+  { cat:"Teilchenmodell", q:"Warum nimmt eine Fluessigkeit die Form ihres Behaelters an, ein Feststoff nicht?", a:["Fluessigkeitsteilchen koennen sich aneinander vorbeibewegen","Fluessigkeitsteilchen sind kleiner","Fluessigkeiten haben keine Anziehungskraefte","Fluessigkeitsteilchen sind schneller als Gasteilchen"], c:0, ex:"In Fluessigkeiten sind die Teilchen dicht beieinander, koennen sich aber gegeneinander verschieben." },
+  { cat:"Energie & Reaktionen", q:"Was ist Aktivierungsenergie?", a:["Energie, um eine Reaktion zu starten","Energie, die bei einer Reaktion freigesetzt wird","Differenz zwischen Ausgangsstoffen und Produkten","Die Energie, die ein Katalysator liefert"], c:0, ex:"Aktivierungsenergie ist die Starterenergie - sie bringt die Ausgangsstoffe in den reaktionsbereiten Zustand." },
+  { cat:"Energie & Reaktionen", q:"Bei einer exothermen Reaktion haben die Produkte...", a:["...weniger Energiegehalt als die Ausgangsstoffe","...mehr Energiegehalt als die Ausgangsstoffe","...gleichen Energiegehalt","...immer Licht erzeugt"], c:0, ex:"Exotherm = Energie wird abgegeben. Die Produkte liegen im Energiediagramm tiefer als die Ausgangsstoffe." },
+  { cat:"Energie & Reaktionen", q:"Was macht ein Katalysator?", a:["Er senkt die Aktivierungsenergie, ohne verbraucht zu werden","Er erhoeht die Reaktionsenergie","Er ist ein Ausgangsstoff der Reaktion","Er verlangsamt die Reaktion"], c:0, ex:"Ein Katalysator bietet einen leichteren Weg - der Huegel im Energiediagramm wird kleiner, ohne dass der Katalysator verbraucht wird." },
+  { cat:"Energie & Reaktionen", q:"Wo liegen bei einer endothermen Reaktion die Produkte im Energiediagramm?", a:["Hoeher als die Ausgangsstoffe","Tiefer als die Ausgangsstoffe","Auf gleicher Hoehe","Immer auf dem Gipfel"], c:0, ex:"Endotherm = Energie wird aufgenommen. Die Produkte liegen hoeher - der Stoff hat mehr Energie gespeichert." },
+  { cat:"Energie & Reaktionen", q:"Eisen + Schwefel zu Eisensulfid ist exotherm. Was bedeutet das?", a:["Es wird Waerme freigesetzt","Es wird Waerme benoetigt","Es entsteht Licht, aber keine Waerme","Die Temperatur bleibt konstant"], c:0, ex:"Exotherm = Waerme wird abgegeben. Das Reaktionsgemisch wird heiss." },
+  { cat:"Energie & Reaktionen", q:"Was ist die Reaktionsenergie?", a:["Differenz der Energiegehalte von Produkten und Ausgangsstoffen","Die gesamte Aktivierungsenergie","Die Energie, die der Katalysator aufnimmt","Die Waerme, die man zum Anzuenden braucht"], c:0, ex:"Reaktionsenergie = Energiegehalt der Ausgangsstoffe minus Energiegehalt der Produkte (bei exothermen Reaktionen)." },
+  { cat:"Verbrennung", q:"Was verbrennt in einer Kerzenflamme eigentlich?", a:["Wachsdampf","Der Docht","Fluessiges Wachs","Festes Wachs"], c:0, ex:"Der Wachsdampf, der bei ca. 300 Grad entsteht, verbrennt - nicht das feste oder fluessige Wachs direkt." },
+  { cat:"Verbrennung", q:"Welche Zone der Kerze ist am heissesten?", a:["Flammenmantel (ca. 1400 Grad)","Flammenkern (ca. 800 Grad)","Flammensaum (ca. 1200 Grad)","Der Docht"], c:0, ex:"Der Flammenmantel mit ca. 1400 Grad ist die heisseste Zone - hier verbrennt der Wachsdampf am vollstaendigsten." },
+  { cat:"Verbrennung", q:"Warum leuchtet eine Kerzenflamme?", a:["Gluehende Russтeilchen geben Licht ab","Das Wachs leuchtet beim Schmelzen","CO2 leuchtet bei hohen Temperaturen","Wasserdampf reflektiert Licht"], c:0, ex:"Russteilchen (Kohlenstoff) werden durch Waerme zum Gluehen gebracht - das erzeugt das sichtbare Licht." },
+  { cat:"Verbrennung", q:"Welche Stoffe entstehen bei vollstaendiger Verbrennung von Wachs?", a:["CO2 und Wasser (H2O)","Nur Kohlenstoff (Russ)","Sauerstoff und Stickstoff","CO und Wasserstoff"], c:0, ex:"Bei vollstaendiger Verbrennung von Kohlenwasserstoffen entstehen immer CO2 und H2O." },
+  { cat:"Verbrennung", q:"Richtige Reihenfolge beim Kerzenbrennen?", a:["Wachs schmilzt, verdampft, Dampf verbrennt, Russ leuchtet","Wachs verbrennt sofort, Dampf entsteht, Licht","Docht brennt, Wachs schmilzt, CO2 entsteht","Russ entsteht zuerst, dann verdampft Wachs"], c:0, ex:"Wachs schmilzt (30 Grad) > verdampft (300 Grad) > Wachsdampf verbrennt (800 Grad) > Russteilchen gluehen (1200-1400 Grad)." },
+  { cat:"Geschichte", q:"Wer gilt als 'Vater der Chemie'?", a:["Jabir ibn Hayyan","Demokrit","Dalton","Aristoteles"], c:0, ex:"Jabir ibn Hayyan (ca. 721-815) fuehrte systematische Experimente durch und entwickelte Verfahren wie die Destillation." },
+  { cat:"Geschichte", q:"Was besagt Demokrits Idee (ca. 400 v. Chr.)?", a:["Materie besteht aus unteilbaren Teilchen (Atomen)","Vier Elemente: Erde, Wasser, Feuer, Luft","Atome haben Elektronen","Stoffe koennen endlos geteilt werden"], c:0, ex:"Demokrit war der Erste, der Materie aus unteilbaren Teilchen ('atomos') zusammengesetzt dachte." },
+  { cat:"Geschichte", q:"Was ist das Besondere an Daltons Atommodell (1803)?", a:["Atome eines Elements sind gleich gross und gleich schwer","Atome koennen geteilt werden","Dalton erfand den Begriff Atom","Dalton beschrieb Elektronen"], c:0, ex:"Dalton machte es wissenschaftlich: Atome eines Elements sind identisch, Atome verschiedener Elemente unterscheiden sich in Masse und Groesse." },
+  { cat:"Geschichte", q:"Welche Wissenschaft war Vorlaeufer der modernen Chemie?", a:["Alchemie","Astronomie","Philosophie","Physik"], c:0, ex:"Die Alchemie legte die Grundlage fuer chemische Labormethoden, auch wenn sie von mystischen Vorstellungen gepraegt war." }
+];
+
+var CATS = ["Alle","Teilchenmodell","Energie & Reaktionen","Verbrennung","Geschichte"];
+var LEVELS = ["Schueler","Assistent","Chemiker","Experte","Meister"];
+var BADGE_LIST = [
+  {id:"s3", label:"Streak-Meister (3)"},
+  {id:"s5", label:"Blitz-Chemiker (5)"},
+  {id:"x100", label:"100 XP"},
+  {id:"x200", label:"200 XP"},
+  {id:"x300", label:"300 XP"}
+];
+var XP_LV = 100;
+var S = { xp:0, streak:0, lv:1, badges:[], cat:"Alle", qi:0, qs:[], answered:false, correct:0, done:false };
+var popupTimer = null;
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var tmp = a[i]; a[i] = a[j]; a[j] = tmp;
+  }
+  return a;
+}
+
+function initQ() {
+  var pool = [];
+  for (var i = 0; i < QUESTIONS.length; i++) {
+    if (S.cat === "Alle" || QUESTIONS[i].cat === S.cat) pool.push(QUESTIONS[i]);
+  }
+  S.qs = shuffle(pool).slice(0, 10);
+  S.qi = 0; S.answered = false; S.done = false; S.correct = 0;
+}
+
+function renderHUD() {
+  document.getElementById("xp-val").innerHTML = S.xp;
+  document.getElementById("streak-val").innerHTML = S.streak;
+  document.getElementById("lv-val").innerHTML = S.lv;
+  document.getElementById("lv-name").innerHTML = LEVELS[S.lv - 1];
+  document.getElementById("xp-fill").style.width = (S.xp % XP_LV) + "%";
+}
+
+function renderCats() {
+  var html = "";
+  for (var i = 0; i < CATS.length; i++) {
+    var active = S.cat === CATS[i] ? " active" : "";
+    html += '<button class="cat-btn' + active + '" data-cat="' + CATS[i] + '">' + CATS[i] + '</button>';
+  }
+  document.getElementById("cats").innerHTML = html;
+  var btns = document.getElementById("cats").getElementsByTagName("button");
+  for (var j = 0; j < btns.length; j++) {
+    btns[j].addEventListener("click", function() { selCat(this.getAttribute("data-cat")); });
+  }
+}
+
+function selCat(c) { S.cat = c; renderCats(); initQ(); renderQ(); }
+
+function renderQ() {
+  if (S.done) { renderScore(); return; }
+  var q = S.qs[S.qi];
+  var sh = shuffle([0,1,2,3]);
+  var streakHtml = "";
+  if (S.streak >= 5) streakHtml = '<span class="streak-hot">&#9889; ' + S.streak + 'er Blitz-Streak!</span>';
+  else if (S.streak >= 3) streakHtml = '<span class="streak-hot">&#128293; ' + S.streak + 'er Streak! +Bonus</span>';
+  else if (S.streak > 0) streakHtml = S.streak + " richtig in Folge";
+
+  var ansHtml = "";
+  for (var i = 0; i < 4; i++) {
+    ansHtml += '<button class="ans" id="ans' + i + '" data-orig="' + sh[i] + '">' + q.a[sh[i]] + '</button>';
+  }
+
+  document.getElementById("quiz").innerHTML =
+    '<div class="streak-row">' + streakHtml + '</div>' +
+    '<div class="card">' +
+      '<div class="q-meta">Frage ' + (S.qi + 1) + ' / ' + S.qs.length + ' &nbsp;&middot;&nbsp; ' + q.cat + '</div>' +
+      '<div class="q-text">' + q.q + '</div>' +
+      '<div class="answers">' + ansHtml + '</div>' +
+      '<div class="feedback" id="fb"></div>' +
+      '<button class="next-btn" id="nxt">Weiter &#8594;</button>' +
+    '</div>';
+
+  for (var k = 0; k < 4; k++) {
+    (function(idx) {
+      document.getElementById("ans" + idx).addEventListener("click", function() { answer(idx); });
+    })(k);
+  }
+  document.getElementById("nxt").addEventListener("click", nextQ);
+}
+
+function answer(idx) {
+  if (S.answered) return;
+  S.answered = true;
+  var q = S.qs[S.qi];
+  var btn = document.getElementById("ans" + idx);
+  var orig = parseInt(btn.getAttribute("data-orig"));
+  var allBtns = document.getElementsByClassName("ans");
+  for (var i = 0; i < allBtns.length; i++) allBtns[i].disabled = true;
+  var fb = document.getElementById("fb");
+  if (orig === q.c) {
+    btn.classList.add("correct");
+    var bonus = S.streak >= 3 ? 10 : 0;
+    var gain = 20 + bonus;
+    S.xp += gain; S.streak++; S.correct++;
+    fb.className = "feedback ok show";
+    fb.innerHTML = "&#10003; Richtig! +" + gain + " XP &nbsp;&mdash;&nbsp; " + q.ex;
+    checkLv(); checkBadge();
+  } else {
+    btn.classList.add("wrong");
+    for (var j = 0; j < allBtns.length; j++) {
+      if (parseInt(allBtns[j].getAttribute("data-orig")) === q.c) allBtns[j].classList.add("correct");
+    }
+    S.streak = 0;
+    fb.className = "feedback bad show";
+    fb.innerHTML = "&#10007; Leider falsch. &nbsp;&mdash;&nbsp; " + q.ex;
+  }
+  document.getElementById("nxt").className = "next-btn show";
+  renderHUD();
+}
+
+function nextQ() {
+  S.qi++;
+  S.answered = false;
+  if (S.qi >= S.qs.length) S.done = true;
+  renderQ();
+}
+
+function checkLv() {
+  var nl = Math.floor(S.xp / XP_LV) + 1;
+  if (nl > LEVELS.length) nl = LEVELS.length;
+  if (nl > S.lv) { S.lv = nl; showPopup("Level Up! Du bist jetzt: " + LEVELS[nl - 1]); }
+}
+
+function checkBadge() {
+  var checks = [
+    {id:"s3", cond: S.streak >= 3, label:"Streak-Meister (3 in Folge)!"},
+    {id:"s5", cond: S.streak >= 5, label:"Blitz-Chemiker (5 in Folge)!"},
+    {id:"x100", cond: S.xp >= 100, label:"100 XP erreicht!"},
+    {id:"x200", cond: S.xp >= 200, label:"200 XP - Profi!"},
+    {id:"x300", cond: S.xp >= 300, label:"300 XP - Meister!"}
+  ];
+  for (var i = 0; i < checks.length; i++) {
+    var b = checks[i];
+    if (b.cond && S.badges.indexOf(b.id) === -1) {
+      S.badges.push(b.id);
+      showPopup(b.label);
+    }
+  }
+}
+
+function showPopup(msg) {
+  var p = document.getElementById("popup");
+  p.innerHTML = msg;
+  p.style.display = "block";
+  if (popupTimer) clearTimeout(popupTimer);
+  popupTimer = setTimeout(function() { p.style.display = "none"; }, 2800);
+}
+
+function renderScore() {
+  var pct = Math.round(S.correct / S.qs.length * 100);
+  var emoji = pct >= 80 ? "&#127942;" : pct >= 60 ? "&#128077;" : "&#128218;";
+  var msg = pct >= 80 ? "Super! Gut vorbereitet fuer die Klassenarbeit!" : pct >= 60 ? "Gut gemacht - noch ein wenig ueben!" : "Weitermachen - du schaffst das!";
+  var badgeHtml = "";
+  for (var i = 0; i < BADGE_LIST.length; i++) {
+    var earned = S.badges.indexOf(BADGE_LIST[i].id) !== -1;
+    badgeHtml += '<div class="badge-chip' + (earned ? " earned" : "") + '">' + BADGE_LIST[i].label + '</div>';
+  }
+  document.getElementById("quiz").innerHTML =
+    '<div class="card score-screen">' +
+      '<div class="score-emoji">' + emoji + '</div>' +
+      '<h2>' + msg + '</h2>' +
+      '<div class="big-num">' + S.correct + ' / ' + S.qs.length + '</div>' +
+      '<div class="score-detail">Gesamt-XP: ' + S.xp + ' &nbsp;&middot;&nbsp; Level ' + S.lv + ': ' + LEVELS[S.lv - 1] + '</div>' +
+      '<div class="badges-earned">' + badgeHtml + '</div>' +
+      '<button class="restart" id="restart-btn">Nochmal spielen</button>' +
+    '</div>';
+  document.getElementById("restart-btn").addEventListener("click", function() { initQ(); renderQ(); });
+}
+
+document.getElementById("diag-toggle").addEventListener("click", function() {
+  document.getElementById("diag-box").classList.toggle("open");
+});
+
+renderCats();
+initQ();
+renderQ();
+renderHUD();
+</script>
+</body>
+</html>
